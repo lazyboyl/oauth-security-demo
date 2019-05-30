@@ -10,6 +10,8 @@ import org.springframework.security.oauth2.config.annotation.web.configuration.A
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
+import org.springframework.security.oauth2.provider.approval.UserApprovalHandler;
+import org.springframework.security.oauth2.provider.token.TokenStore;
 
 /**
  * @author linzf
@@ -23,6 +25,10 @@ public class Oauth2ServerConfig extends AuthorizationServerConfigurerAdapter {
 
     @Autowired
     private AuthenticationManager authenticationManager;
+    @Autowired
+    TokenStore tokenStore;
+    @Autowired
+    private UserApprovalHandler userApprovalHandler;
 
     /**
      * 用来配置令牌端点(Token Endpoint)的安全约束.
@@ -75,10 +81,11 @@ public class Oauth2ServerConfig extends AuthorizationServerConfigurerAdapter {
      */
     @Override
     public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
-        //设置认证管理器
-        endpoints.authenticationManager(authenticationManager);
-        //设置访问/oauth/token接口，获取token的方式
-        endpoints.allowedTokenEndpointRequestMethods(HttpMethod.GET, HttpMethod.POST);
+        // 这里与上一篇不同的是，增加tokenStore(用户存放token)和userApprovalHandler(用于用户登录)配置
+        endpoints.tokenStore(tokenStore)
+                .userApprovalHandler(userApprovalHandler)
+                .authenticationManager(authenticationManager)
+                .allowedTokenEndpointRequestMethods(HttpMethod.GET,HttpMethod.POST);
     }
 
 }

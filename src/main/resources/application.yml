@@ -1,0 +1,47 @@
+server:
+  port: 8688
+
+spring:
+  security:
+    oauth2:
+      client:
+        clientId: demoClient
+        clientSecret: demoSecret
+        authorizedGrantTypes: authorization_code,client_credentials, password, refresh_token,implicit
+        scopes: read,write
+        resourceIds: oauth2-resource
+        accessTokenValiditySeconds: 3600
+        refreshTokenValiditySeconds: 7200
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/vcm?characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: root
+    password: 123456
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      filters: stat
+      maxActive: 20
+      initialSize: 1
+      maxWait: 60000
+      minIdle: 1
+      timeBetweenEvictionRunsMillis: 60000
+      minEvictableIdleTimeMillis: 300000
+      validationQuery: select 'x'
+      testWhileIdle: true
+      testOnBorrow: false
+      testOnReturn: false
+      poolPreparedStatements: true
+      maxOpenPreparedStatements: 20
+  redis:
+    host: 127.0.0.1
+    password: 123456
+    port: 6379
+    database: 0
+    jedis:
+      pool:
+        max-active: 8
+        max-wait: -1
+        max-idle: 20
+        min-idle: 0
+      timeout: 2000
+
