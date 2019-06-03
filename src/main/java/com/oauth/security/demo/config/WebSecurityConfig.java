@@ -9,8 +9,6 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.provider.ClientDetailsService;
@@ -20,7 +18,6 @@ import org.springframework.security.oauth2.provider.approval.TokenStoreUserAppro
 import org.springframework.security.oauth2.provider.request.DefaultOAuth2RequestFactory;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 
 /**
  * @author linzf
@@ -35,30 +32,29 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     RedisConnectionFactory redisConnectionFactory;
     @Autowired
     private ClientDetailsService clientDetailsService;
+    @Autowired
+    private OauthUserDetailsService oauthUserDetailsService;
 
+    /**
+     * 功能描述：初始化TokenStore的bean
+     * @return 返回初始化的bean
+     */
     @Bean
     public TokenStore tokenStore(){
         return new RedisTokenStore(redisConnectionFactory);
     }
 
-    //配置用户存储在内存中，可以设置用户账号、密码、角色等
-    @Override
-    protected UserDetailsService userDetailsService() {
-        InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
-        manager.createUser(User.withUsername("user").password(new BCryptPasswordEncoder().encode("123456"))
-                .roles("user").build());
-        manager.createUser(User.withUsername("admin").password(new BCryptPasswordEncoder().encode("123456"))
-                .roles("admin").build());
-        return manager;
-    }
 
+
+    /**
+     * 功能描述：配置用户的读取方式从数据库中进行数据的验证
+     * @param auth
+     * @throws Exception
+     */
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        //将用户信息添加认证管理中，这里有两种方式
-        //方法一：
-        auth.userDetailsService(userDetailsService()).passwordEncoder(passwordEncoder());
-        //方法二：
-        //auth.inMemoryAuthentication().withUser("user1").password(passwordEncoder().encode("123456")).roles("user");
+        auth.userDetailsService(oauthUserDetailsService)
+                .passwordEncoder(passwordEncoder());
     }
 
     /**
@@ -75,6 +71,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .and().logout().logoutUrl("/logout").deleteCookies("JSESSIONID").permitAll()
                 .and().authorizeRequests()
                 .antMatchers("/login.html").permitAll()
+                .antMatchers("/user/login").permitAll()
                 .anyRequest().authenticated()
                 .and().csrf().disable();
     }

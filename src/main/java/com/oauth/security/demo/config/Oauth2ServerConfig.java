@@ -11,6 +11,7 @@ import org.springframework.security.oauth2.config.annotation.web.configuration.E
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
 import org.springframework.security.oauth2.provider.approval.UserApprovalHandler;
+import org.springframework.security.oauth2.provider.error.WebResponseExceptionTranslator;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 
 /**
@@ -29,6 +30,10 @@ public class Oauth2ServerConfig extends AuthorizationServerConfigurerAdapter {
     TokenStore tokenStore;
     @Autowired
     private UserApprovalHandler userApprovalHandler;
+    @Autowired
+    private WebResponseExceptionTranslator bootWebResponseExceptionTranslator;
+    @Autowired
+    private OauthUserDetailsService oauthUserDetailsService;
 
     /**
      * 用来配置令牌端点(Token Endpoint)的安全约束.
@@ -66,8 +71,8 @@ public class Oauth2ServerConfig extends AuthorizationServerConfigurerAdapter {
                 .authorizedGrantTypes("authorization_code", "client_credentials", "password", "refresh_token")
                 .scopes("all")
                 .resourceIds("oauth2-resource")
-                .accessTokenValiditySeconds(60 * 60)
-                .refreshTokenValiditySeconds(60 * 60);
+                .accessTokenValiditySeconds(60)
+                .refreshTokenValiditySeconds(600);
     }
 
     /**
@@ -85,7 +90,11 @@ public class Oauth2ServerConfig extends AuthorizationServerConfigurerAdapter {
         endpoints.tokenStore(tokenStore)
                 .userApprovalHandler(userApprovalHandler)
                 .authenticationManager(authenticationManager)
-                .allowedTokenEndpointRequestMethods(HttpMethod.GET,HttpMethod.POST);
+                // 接收get和post方式来请求请求
+                .allowedTokenEndpointRequestMethods(HttpMethod.GET, HttpMethod.POST)
+                .userDetailsService(oauthUserDetailsService)
+                // 增加账号密码错误的时候错误信息的提示给到前端
+                .exceptionTranslator(bootWebResponseExceptionTranslator);
     }
 
 }
